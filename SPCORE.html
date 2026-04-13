@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S.P CORE v18.0 - ELITE RADAR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root { 
+            --primary: #007aff; 
+            --bg: #f2f6ff; 
+            --card-shadow: 0 10px 30px rgba(0, 122, 255, 0.08);
+            --radius-main: 28px; /* Sudut elegan sesuai referensi */
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg); 
+            margin: 0; height: 100dvh; overflow: hidden; 
+            color: #1c1c1e;
+        }
+
+        /* Container Utama */
+        .page { 
+            position: absolute; inset: 0; padding: 15px; 
+            display: flex; flex-direction: column; gap: 12px;
+            max-width: 500px; margin: auto;
+        }
+
+        /* HEADER - Sesuai Gambar */
+        header { 
+            display: flex; align-items: center; gap: 15px; 
+            background: #fff; padding: 15px 20px; border-radius: var(--radius-main);
+            box-shadow: var(--card-shadow);
+        }
+        .avatar { 
+            width: 55px; height: 55px; border-radius: 50%; 
+            background: linear-gradient(135deg, #007aff, #5ac8fa); 
+            display: flex; align-items: center; justify-content: center; 
+            color: #fff; font-weight: 800; font-size: 20px;
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.2);
+        }
+        .user-meta .region-tag { font-size: 10px; font-weight: 800; color: var(--primary); margin-bottom: 2px; }
+        .user-meta b { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+
+        /* MAP BOX - Real Radar Satelit */
+        .map-wrapper {
+            width: 100%; height: 180px; background: #fff; border-radius: var(--radius-main); 
+            overflow: hidden; border: 4px solid #fff; position: relative;
+            box-shadow: var(--card-shadow);
+        }
+        #map { width: 100%; height: 100%; z-index: 1; }
+        
+        .map-btns {
+            position: absolute; bottom: 10px; left: 10px; z-index: 1000;
+            display: flex; gap: 8px;
+        }
+        .btn-m {
+            background: rgba(255,255,255,0.9); border: none; padding: 6px 12px;
+            border-radius: 12px; font-size: 10px; font-weight: 800; color: var(--primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); backdrop-filter: blur(4px);
+        }
+
+        /* PANEL KONTROL - Sesuai Gambar */
+        .card-panel { 
+            background: #fff; border-radius: var(--radius-main); padding: 20px; 
+            box-shadow: var(--card-shadow); 
+        }
+        .styled-input { 
+            width: 100%; background: #f8f9fb; border: 1.5px solid #eef2f6; 
+            padding: 15px 20px; border-radius: 18px; font-weight: 600; 
+            font-size: 14px; margin-bottom: 12px; transition: 0.3s;
+        }
+        .styled-input:focus { border-color: var(--primary); background: #fff; }
+        
+        .btn-intercept { 
+            width: 100%; padding: 18px; background: #007aff; color: #fff; border: none; 
+            border-radius: 18px; font-weight: 800; font-size: 13px;
+            box-shadow: 0 8px 22px rgba(0, 122, 255, 0.25);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            cursor: pointer; active: transform: scale(0.98);
+        }
+
+        /* MISSION LIST - Tempat Data MPH Muncul */
+        #mList { 
+            flex: 1; overflow-y: auto; 
+            padding-right: 5px;
+        }
+        #mList::-webkit-scrollbar { width: 4px; }
+        #mList::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 10px; }
+
+        .m-card {
+            background: #fff; border-radius: 22px; padding: 15px 20px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02); border: 1px solid #f0f4f8;
+        }
+        .m-card b { font-size: 15px; }
+        .m-card .val { color: var(--primary); font-weight: 800; font-size: 18px; }
+
+        /* CHAT BOX - Sesuai Gambar */
+        .chat-container { 
+            background: #fff; border-radius: var(--radius-main); padding: 15px; 
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.02);
+        }
+        .chat-input-box {
+            background: #f8f9fb; border-radius: 25px; border: 1.5px solid #eef2f6;
+            display: flex; align-items: center; padding: 2px 18px;
+        }
+        .chat-input-box input { flex: 1; border: none; background: none; padding: 12px 0; font-weight: 600; font-size: 14px; }
+        .btn-send { color: var(--primary); background: none; border: none; font-weight: 800; font-size: 14px; padding-left: 10px; }
+
+    </style>
+</head>
+<body onload="init()">
+
+    <div class="page">
+        <header>
+            <div class="avatar">ST</div>
+            <div class="user-meta">
+                <div class="region-tag" id="regTag">REGION: ID</div>
+                <b>STORMPASSION_LEADER</b>
+            </div>
+        </header>
+
+        <div class="map-wrapper">
+            <div id="map"></div>
+            <div class="map-btns">
+                <button class="btn-m" onclick="jump('ID')">INDONESIA</button>
+                <button class="btn-m" onclick="jump('US')">USA MAP</button>
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <input type="text" id="mLoc" class="styled-input" placeholder="Enter City (e.g Jakarta)">
+            <button id="btnFetch" onclick="fetchData()" class="btn-intercept">INTERCEPT SATELLITE DATA</button>
+        </div>
+
+        <div id="mList">
+            </div>
+
+        <div class="chat-container">
+            <div class="chat-input-box">
+                <input type="text" id="msgIn" placeholder="Status Update...">
+                <button class="btn-send" onclick="sendMsg()">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const API_KEY = '506085a864757c3e100862086e3f350c';
+        let map, radarLayer;
+
+        function init() {
+            // Setup Map Dasar
+            map = L.map('map', { zoomControl: false }).setView([-2.5489, 118.0149], 4);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+            
+            // Panggil Radar Asli
+            updateRadar();
+            // Refresh radar tiap 10 menit otomatis
+            setInterval(updateRadar, 600000);
+            
+            // Load riwayat
+            renderList();
+        }
+
+        async function updateRadar() {
+            try {
+                const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+                const data = await res.json();
+                const last = data.radar.past[data.radar.past.length - 1].time;
+                
+                if (radarLayer) map.removeLayer(radarLayer);
+                // Layer warna-warna radar asli
+                radarLayer = L.tileLayer(`https://tilecache.rainviewer.com/v2/radar/${last}/256/{z}/{x}/{y}/2/1_1.png`, {
+                    opacity: 0.65, zIndex: 1000
+                }).addTo(map);
+            } catch (e) { console.log("Radar offline"); }
+        }
+
+        function jump(loc) {
+            if(loc === 'ID') {
+                map.flyTo([-2.5489, 118.0149], 4);
+                document.getElementById('regTag').innerText = "REGION: ID";
+            } else {
+                map.flyTo([37.0902, -95.7129], 4);
+                document.getElementById('regTag').innerText = "REGION: US";
+            }
+        }
+
+        async function fetchData() {
+            const city = document.getElementById('mLoc').value.trim();
+            const btn = document.getElementById('btnFetch');
+            if(!city) return;
+
+            btn.innerText = "INTERCEPTING..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=imperial`);
+                const data = await res.json();
+                
+                if(data.cod !== 200) throw new Error("City Not Found");
+
+                // Zoom Map ke lokasi kota
+                map.flyTo([data.coord.lat, data.coord.lon], 9);
+
+                // Save Data
+                let store = JSON.parse(localStorage.getItem('sp_history') || "[]");
+                store.unshift({
+                    id: Date.now(),
+                    name: city.toUpperCase(),
+                    mph: data.wind.speed.toFixed(1)
+                });
+                localStorage.setItem('sp_history', JSON.stringify(store));
+                renderList();
+
+            } catch(e) { alert(e.message); }
+            finally {
+                btn.innerText = "INTERCEPT SATELLITE DATA";
+                btn.disabled = false;
+                document.getElementById('mLoc').value = "";
+            }
+        }
+
+        function renderList() {
+            const box = document.getElementById('mList');
+            let data = JSON.parse(localStorage.getItem('sp_history') || "[]");
+            box.innerHTML = data.map(i => `
+                <div class="m-card">
+                    <div>
+                        <div style="font-size:9px; font-weight:800; color:var(--primary); margin-bottom:2px;">SATELLITE FEED</div>
+                        <b>${i.name}</b>
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="val">${i.mph}</span>
+                        <div style="font-size:9px; font-weight:800; color:#8e8e93;">MPH WIND</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function sendMsg() {
+            const i = document.getElementById('msgIn');
+            if(i.value) i.value = ""; // Reset chat input
+        }
+    </script>
+</body>
+</html>
