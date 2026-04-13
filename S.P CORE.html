@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S.P CORE v18.0 - AI Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-glow: rgba(0, 122, 255, 0.15);
+            --danger: #ff3b30;
+            --bg: #f2f2f7;
+            --card: rgba(255, 255, 255, 0.85);
+            --input-bg: #ffffff;
+            --text-main: #1c1c1e;
+            --ease-spring: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg); 
+            background-image: radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 40%);
+            margin: 0; height: 100dvh; overflow: hidden; color: var(--text-main);
+        }
+
+        .page { 
+            position: absolute; inset: 0; padding: 20px; 
+            display: none; flex-direction: column;
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .page.active { display: flex; opacity: 1; transform: translateY(0); }
+
+        header { 
+            display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+            background: var(--card); padding: 16px; border-radius: 28px;
+            backdrop-filter: blur(20px); border: 1px solid #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            animation: slideDown 0.8s var(--ease-spring);
+        }
+
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } }
+
+        .avatar-circle { 
+            min-width: 54px; height: 54px; border-radius: 50%; 
+            background: linear-gradient(135deg, #007aff, #5ac8fa); 
+            display: flex; align-items: center; justify-content: center; 
+            color: #fff; font-weight: 800; border: 3px solid #fff;
+            box-shadow: 0 8px 15px var(--primary-glow);
+        }
+
+        .user-meta h2 { margin: 0; font-weight: 800; font-size: 18px; padding-right: 25px !important; }
+
+        .item-card { 
+            background: var(--card); border-radius: 22px; padding: 18px; margin-bottom: 12px; 
+            display: flex; flex-direction: column; gap: 8px;
+            border: 1px solid #fff; backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            animation: pop 0.5s var(--ease-spring) both;
+            position: relative;
+        }
+
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } }
+
+        .ai-badge {
+            font-size: 9px; background: #e1f0ff; color: var(--primary);
+            padding: 4px 8px; border-radius: 8px; font-weight: 800; width: fit-content;
+        }
+
+        .mph-value { font-size: 24px; font-weight: 800; color: var(--primary); }
+
+        .styled-input { 
+            width: 100%; background: var(--input-bg); border: 1.5px solid #e5e5ea; 
+            padding: 16px; border-radius: 18px; font-weight: 600; margin-bottom: 12px;
+        }
+
+        .btn-main { 
+            width: 100%; padding: 18px; background: var(--primary); color: #fff; border: none; 
+            border-radius: 20px; font-weight: 800; box-shadow: 0 10px 25px rgba(0, 122, 255, 0.2);
+        }
+
+        .btn-kick {
+            background: var(--danger); color: white; border: none; padding: 4px 10px;
+            border-radius: 8px; font-size: 10px; font-weight: 800; margin-left: 10px;
+        }
+
+        .del-btn {
+            position: absolute; top: 15px; right: 15px;
+            color: var(--danger); font-weight: 800; font-size: 18px; cursor: pointer;
+        }
+
+        #tornado-effect {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 180px; pointer-events: none; opacity: 0; z-index: 1000;
+        }
+        #tornado-effect.show { opacity: 1; }
+    </style>
+</head>
+<body onload="init()">
+
+    <img id="tornado-effect" src="tornado.gif" alt="">
+
+    <div id="p-login" class="page">
+        <div style="margin-top: 60px; text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size:42px; font-weight:800; margin:0; letter-spacing:-2px;">S.P <span style="color:var(--primary)">CORE</span></h1>
+            <p style="font-weight: 700; color:#8e8e93;">AI-DRIVEN INTERCEPTOR SYSTEM</p>
+        </div>
+        <div style="background:var(--card); padding:30px; border-radius:35px; border: 1px solid #fff;">
+            <div class="styled-input" onclick="openReg()" style="cursor:pointer; color:var(--primary); display:flex; justify-content:space-between;">
+                <span id="labelReg">SELECT REGION</span><span>▼</span>
+            </div>
+            <input type="text" id="nameIn" class="styled-input" placeholder="Enter Callsign...">
+            <button class="btn-main" onclick="login()">AUTHORIZE SYSTEM</button>
+        </div>
+    </div>
+
+    <div id="p-dash" class="page">
+        <header>
+            <div class="avatar-circle" id="userPfp">??</div>
+            <div class="user-meta">
+                <div style="font-size:10px; font-weight:800; color:var(--primary);" id="tagReg">REGION: --</div>
+                <div style="display:flex; align-items:center;">
+                    <h2 id="tagName">---</h2>
+                    <button id="kickBtn" class="btn-kick" style="display:none;" onclick="logout()">KICK SELF</button>
+                </div>
+            </div>
+        </header>
+
+        <div id="leaderBox" style="display:none; margin-bottom: 15px;">
+            <div style="background:rgba(255,255,255,0.6); border-radius:24px; padding:15px; border: 1px solid #fff;">
+                <input type="text" id="mLoc" class="styled-input" placeholder="Target Location" style="margin-bottom:10px;">
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="mEf" class="styled-input" placeholder="EF (1-10)" style="margin:0;">
+                    <button onclick="addM()" style="background:var(--primary); color:#fff; border:none; border-radius:15px; width:80px; font-weight:800;">CALC</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mList" style="flex:1; overflow-y:auto; padding: 5px 0;"></div>
+
+        <div style="background:rgba(255,255,255,0.8); border-radius:30px; padding:20px; border: 1px solid #fff;">
+            <div id="chat-flow" style="height:80px; overflow-y:auto; font-size:13px; margin-bottom:10px;"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="msgIn" class="styled-input" placeholder="Status..." style="margin:0; border-radius:25px; padding:12px;">
+                <button onclick="sendMsg()" style="color:var(--primary); background:none; border:none; font-weight:800;">SEND</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="regMod" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.15); backdrop-filter:blur(10px); z-index:100; align-items:flex-end;" onclick="this.style.display='none'">
+        <div style="background:#fff; width:100%; border-radius:35px 35px 0 0; padding:30px;" onclick="event.stopPropagation()">
+            <div style="padding:20px; text-align:center; font-weight:800; border-bottom:1px solid #f2f2f7;" onclick="setReg('ID')">INDONESIA</div>
+            <div style="padding:20px; text-align:center; font-weight:800;" onclick="setReg('US')">UNITED STATES</div>
+        </div>
+    </div>
+
+    <script>
+        let regChosen = "";
+        const ADMIN = "STORMPASSION_LEADER";
+
+        function openReg() { document.getElementById('regMod').style.display = 'flex'; }
+        function setReg(r) { regChosen = r; document.getElementById('labelReg').innerText = r; document.getElementById('regMod').style.display = 'none'; }
+
+        function init() {
+            const u = localStorage.getItem('sp_u_v18');
+            const r = localStorage.getItem('sp_r_v18');
+            const target = (u && r) ? 'p-dash' : 'p-login';
+            const page = document.getElementById(target);
+            page.style.display = 'flex';
+            setTimeout(() => page.classList.add('active'), 50);
+            if(u) setup(u, r);
+            drawT();
+        }
+
+        function login() {
+            const u = document.getElementById('nameIn').value.trim();
+            if(!u || !regChosen) return;
+            localStorage.setItem('sp_u_v18', u);
+            localStorage.setItem('sp_r_v18', regChosen);
+            location.reload();
+        }
+
+        function setup(u, r) {
+            document.getElementById('tagName').innerText = u.toUpperCase();
+            document.getElementById('tagReg').innerText = "REGION: " + r;
+            document.getElementById('userPfp').innerText = u.substring(0,2).toUpperCase();
+            if(u.toUpperCase() === ADMIN) {
+                document.getElementById('leaderBox').style.display = "block";
+                document.getElementById('kickBtn').style.display = "block"; // Munculkan tombol kick hanya untuk admin
+            }
+        }
+
+        function addM() {
+            const l = document.getElementById('mLoc').value;
+            const ef = parseFloat(document.getElementById('mEf').value);
+            if(!l || isNaN(ef)) return;
+
+            const mphResult = (ef * 25.5 + (Math.random() * 5)).toFixed(1);
+
+            let data = JSON.parse(localStorage.getItem('sp_t_v18') || "[]");
+            data.unshift({id: Date.now(), l, ef, mph: mphResult});
+            localStorage.setItem('sp_t_v18', JSON.stringify(data));
+            
+            document.getElementById('mLoc').value = ""; 
+            document.getElementById('mEf').value = "";
+            drawT();
+        }
+
+        // FITUR HAPUS MISI
+        function deleteM(id) {
+            if(!confirm("Hapus misi ini dari core?")) return;
+            let data = JSON.parse(localStorage.getItem('sp_t_v18') || "[]");
+            data = data.filter(item => item.id !== id);
+            localStorage.setItem('sp_t_v18', JSON.stringify(data));
+            drawT();
+        }
+
+        function drawT() {
+            const box = document.getElementById('mList');
+            const user = localStorage.getItem('sp_u_v18').toUpperCase();
+            let data = JSON.parse(localStorage.getItem('sp_t_v18') || "[]");
+            
+            box.innerHTML = data.map(i => `
+                <div class="item-card">
+                    ${user === ADMIN ? `<div class="del-btn" onclick="deleteM(${i.id})">×</div>` : ''}
+                    <div class="ai-badge">AI PREDICTION ACTIVE</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div><b style="font-size:16px;">${i.l.toUpperCase()}</b><br><small style="color:#8e8e93;">EF LEVEL: ${i.ef}</small></div>
+                        <div style="text-align:right;">
+                            <div class="mph-value">${i.mph}</div>
+                            <div style="font-size:10px; font-weight:800; color:var(--primary);">MPH CAPACITY</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function sendMsg() {
+            const i = document.getElementById('msgIn');
+            const f = document.getElementById('chat-flow');
+            const user = localStorage.getItem('sp_u_v18');
+            if(i.value) {
+                f.innerHTML += `<div><b style="color:var(--primary)">${user}:</b> ${i.value}</div>`;
+                if(user.toUpperCase() === ADMIN) {
+                    const torn = document.getElementById('tornado-effect');
+                    torn.classList.add('show');
+                    setTimeout(() => torn.classList.remove('show'), 1500);
+                }
+                i.value = ""; f.scrollTop = f.scrollHeight;
+            }
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+    </script>
+</body>
+</html>
